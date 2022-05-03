@@ -34,6 +34,33 @@ async function run() {
           res.send(items);
       })
 
+      app.get('/item/:id', async(req,res) =>{
+          const id = req.params.id;
+          const query = {_id:ObjectId(id)};
+          console.log(query);
+          const singleItem = await collection.findOne(query);
+          res.send(singleItem);
+
+      })
+
+      app.put('/item/:id', async(req, res)=>{
+        const id = req.params.id;
+        const updatedUser = req.body;
+        console.log(updatedUser)
+         const query = { _id:ObjectId(id) };
+        const options = { upsert: true };
+        const updateDoc = {
+            $set: {
+             quantity : updatedUser.quantity,
+             
+            } 
+          };
+        const result = await collection.updateOne(query, updateDoc, options );
+        res.send(result);
+       
+
+    })
+
       app.delete('/item/:id', async(req, res) =>{
           const id = req.params.id;
           const query = {_id:ObjectId(id)};
