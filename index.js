@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+var jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
@@ -9,7 +10,21 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-
+function jwtVerify  (req, res, next) {
+    const jwtHeader = req.headers.authorization;
+    if(!jwtHeader){
+        return res.status(401).send({message: 'unauthorized access'});
+    }
+    const token = jwtHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(error, decoded)=>{
+        if(error){
+            return res.status(403).send({message: 'Forbidden Access'});
+        }
+        console.log('decode', decoded);
+        req.decoded = decoded;
+    })
+    next();
+}
 
 
 
@@ -19,7 +34,21 @@ async function run() {
     try {
         await client.connect();
         const collection = client.db("I-House").collection("Items");
+        //JWT
+        app.post('/login', async(req,res) =>{
+            
+            const user = req.body;
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,{
+                expiresIn: '1d'
+            });
+            res.send({accessToken});
 
+
+        })
+
+
+
+        //website API
         app.post('/item', async (req, res) => {
             const newItem = req.body;
             console.log(newItem);
@@ -34,13 +63,21 @@ async function run() {
             res.send(items);
         });
 
-        app.get('/myItem', async(req, res) =>{
+        app.get('/myItem', jwtVerify, async (req, res) =>{
+            const decodedEmail = req.decoded.email;
             const email = req.query.email;
-            const query = {email};
-            const cursor = collection.find(query);
-            const items = await cursor.toArray();
-            res.send(items);
-        })
+            if(email === decodedEmail){
+                const query = {email};
+           const cursor = collection.find(query);
+           const items = await cursor.toArray();
+           res.send(items);
+       }
+       else{
+           res.status(403).send({message: 'forbidden access'})
+       }
+            
+        
+    })
 
         app.get('/item/:id', async (req, res) => {
             const id = req.params.id;
@@ -48,6 +85,8 @@ async function run() {
             console.log(query);
             const singleItem = await collection.findOne(query);
             res.send(singleItem);
+            
+           
 
         })
 
