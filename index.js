@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
@@ -10,22 +10,25 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-function jwtVerify  (req, res, next) {
+ function jwtVerify(req, res, next) {
     const jwtHeader = req.headers.authorization;
-    if(!jwtHeader){
+    console.log(jwtHeader);
+     if(!jwtHeader){
         return res.status(401).send({message: 'unauthorized access'});
     }
-    const token = jwtHeader.split(' ')[1];
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(error, decoded)=>{
+     const token = jwtHeader.split(' ')[1];
+     console.log(token)
+     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded)=>{
         if(error){
             return res.status(403).send({message: 'Forbidden Access'});
         }
         console.log('decode', decoded);
-        req.decoded = decoded;
-    })
-    next();
+          req.decoded = decoded;
+          next();
+    })   
+    
 }
-
+ 
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.8zhi6.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -63,18 +66,22 @@ async function run() {
             res.send(items);
         });
 
-        app.get('/myItem', jwtVerify, async (req, res) =>{
-            const decodedEmail = req.decoded.email;
+        app.get('/myItem', jwtVerify,  async (req, res) =>{
+            /* const jwtHeader = req.headers.authorization;
+            console.log(jwtHeader); */
+             const decodedEmail = req.decoded.email; 
             const email = req.query.email;
-            if(email === decodedEmail){
-                const query = {email};
+            console.log(email)
+             if(email === decodedEmail){ 
+                const query = {email: email};
+               
            const cursor = collection.find(query);
            const items = await cursor.toArray();
            res.send(items);
-       }
+             }
        else{
            res.status(403).send({message: 'forbidden access'})
-       }
+       } 
             
         
     })
