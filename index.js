@@ -32,6 +32,14 @@ async function run() {
             const cursor = collection.find(query);
             const items = await cursor.toArray();
             res.send(items);
+        });
+
+        app.get('/myItem', async(req, res) =>{
+            const email = req.query.email;
+            const query = {email};
+            const cursor = collection.find(query);
+            const items = await cursor.toArray();
+            res.send(items);
         })
 
         app.get('/item/:id', async (req, res) => {
