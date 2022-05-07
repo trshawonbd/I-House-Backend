@@ -67,8 +67,6 @@ async function run() {
         });
 
         app.get('/myItem', jwtVerify,  async (req, res) =>{
-            /* const jwtHeader = req.headers.authorization;
-            console.log(jwtHeader); */
              const decodedEmail = req.decoded.email; 
             const email = req.query.email;
             console.log(email)
